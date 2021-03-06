@@ -110,7 +110,6 @@ def detect_circle(img, min_radius, max_radius, p1=200, p2=100):
             for i in detect_circles_rounded[0, :]:
                 if (100 <= i[0] <= 400) & (100 <= i[1] <= 400):
                     cv2.circle(img, (i[0],i[1]), i[2], (255), 5) #Teken cirkel
-                    print(i[2])
                     rad = convert_pixels_to_micrometers(i[2])
                     ar = area(rad)
                     return ar, img
