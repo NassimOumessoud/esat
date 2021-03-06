@@ -8,6 +8,8 @@ import cv2
 import numpy as np
 import os
 
+#I made this change!
+
 
 def run(main_folder, tstart, teind, weight=10, growth=2, shrink=2):
     """
