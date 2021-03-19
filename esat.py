@@ -8,8 +8,6 @@ import cv2
 import numpy as np
 import os
 
-#I made this change!
-
 
 def run(main_folder, tstart, teind, weight=10, growth=2, shrink=2):
     """
@@ -25,7 +23,7 @@ def run(main_folder, tstart, teind, weight=10, growth=2, shrink=2):
     output_path = os.path.join(path, output_name)
     
     import xlsxwriter
-    export = xlsxwriter.Workbook(f'{output_path}_test')      
+    export = xlsxwriter.Workbook(f'{output_path}')      
     bold = export.add_format({'bold': True})     
     red = export.add_format({'font_color': 'red'})       
     export_sheet = export.add_worksheet('Surface area')
@@ -74,25 +72,26 @@ def files(route, img_path):
     """
     for dirpath, _, files in os.walk(route):         #open een van de 7 folders
         file_counter = 0
-        surface = []
-       
+        surfaces = []
+        r = 0
         for file_name in files:                             #Zoek fotos per folder
             file_path = os.path.join(dirpath, file_name)         #Voeg path en file_name samen
             mid = len(files)/2
             image = cv2.imread(file_path, 0)                      #Lees image via path in zwart\wit
+            min_rad = int(round(r*0.8))
             if file_counter <= mid:
                 file_counter += 1  
-                min_rad, max_rad = 50, 120                              #telt het aantal fotos
+                max_rad = 120                              #telt het aantal fotos
             else:
                 file_counter += 1
-                min_rad, max_rad = 90, 180
+                max_rad = 180
             
-            s, img = detect_circle(image, min_rad, max_rad)
-            surface.append(s)
+            r, center, s, img = detect_circle(image, min_rad, max_rad)
+            surfaces.append(s)
             img_file = os.path.join(img_path, str(file_counter))
             cv2.imwrite(img_file+'.png', img)
             cv2.waitKey(0)
-    return surface
+    return surfaces
 
     
 def detect_circle(img, min_radius, max_radius, p1=200, p2=100):
@@ -113,38 +112,11 @@ def detect_circle(img, min_radius, max_radius, p1=200, p2=100):
                 if (100 <= i[0] <= 400) & (100 <= i[1] <= 400):
                     cv2.circle(img, (i[0],i[1]), i[2], (255), 5) #Teken cirkel
                     rad = convert_pixels_to_micrometers(i[2])
-                    ar = area(rad)
-                    return ar, img
+                    ar = round(area(rad))
+                    return rad, (i[0], i[1]), ar, img
         else:
             continue
            
-
-def cleaner(points, x, a, b):
-    """
-    Cleans noisy code of (very) unlikely measuring points, where a is the maximum 
-    ratio growth, and b is the minimum ratio growth, saying it is unlikely for 
-    the datapoints to have grown or shrunken so much.
-    impr --> List comprehension
-    """
-    new_points = []
-    new_x = []
-    cleaned = 0
-    removed = []
-    for i in range(1, len(points)):
-        pprev_point = points[i-2]
-        prev_point = points[i-1]
-        point = points[i]
-        if point < a*prev_point and point > (1/b)*prev_point:
-            if point < a*pprev_point and point > (1/b)*pprev_point:
-                new_points.append(point)
-                new_x.append(x[i])
-        else:
-            cleaned += 1
-            removed.append(i+1)
-            continue
-#    print(f'I cleared {cleaned} images from the results')
-#    print(f'I cleared images: {removed} from the results')
-    return new_points, new_x, removed
     
 def convert_pixels_to_micrometers(pixels):
     """

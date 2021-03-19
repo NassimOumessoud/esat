@@ -22,14 +22,14 @@ def analyse(result, workbook, sheet, sheet_2, exc_index, name, weight, x_result,
                                           valleys[1], 
                                           peaks[0], 
                                           peaks[1])
-    def linear_fit(x, a, b):
-        return [a*x[i]+b for i in range(len(x))]
+    def fit(x, a, b):
+        return [a*np.exp(x[i]*b) for i in range(len(x))]
     
     from scipy.optimize import curve_fit
-    popt, pcov = curve_fit(linear_fit, x_result, result, p0=[553, 0])
-    slope = np.around(len(result)/(x_result[-1]-x_result[0])*popt[0], decimals=2)
+    popt, pcov = curve_fit(fit, x_result, result, p0=[553, 0])
+    slope = np.around(len(result)/(x_result[-1]-x_result[0])*popt[0], decimals=0)
     start = np.around(popt[1], decimals=2)
-    lin_fit = linear_fit(x_result, popt[0], popt[1])
+    lin_fit = fit(x_result, popt[0], popt[1])
     
     plot(result, sma, x_sma, valleys, peaks, collapses, lin_fit, rises, x_result,
                                                               name, path)
@@ -144,6 +144,7 @@ def plot(data, trend, x_trend, data_1, data_2, data_3, data_4, data_5, x_data,
     plt.savefig(save_path)
     plt.close()
     
+    
 def to_excel(data, slope_data, start_data, workbook, sheet, sheet_2, exc_index, name,
              collapses, rises, time):
     """
@@ -159,7 +160,7 @@ def to_excel(data, slope_data, start_data, workbook, sheet, sheet_2, exc_index, 
         sheet.write(exc_index, i+1, np.around(time[i], decimals=1))
         
     sheet_2.write(0, 0, 'Files', bold)
-    sheet_2.write(0, 1, 'Slopes', bold)
+    sheet_2.write(0, 1, 'Slope [micrometer^2/hour]', bold)
     sheet_2.write(exc_index+1, 0, f'{name}', bold)
     sheet_2.write(exc_index+1, 1, slope_data)
     sheet_2.write(exc_index+1, 2, start_data)
