@@ -10,74 +10,78 @@ from tkinter import ttk
 from tkinter import filedialog
 import os
 import esat
-    
-    
+
+
 root = Tk()
-root.title('ESAT')
-root.configure(bg='lightsteelblue')
-root.geometry('800x400')
-    
+root.title("ESAT")
+root.configure(bg="lightsteelblue")
+root.geometry("800x400")
+
 main_folder = filedialog.askdirectory()
-welcome_label = Label(root, text = 'Welcome!', font = ('Helvetica', 12), 
-                      bg='lightsteelblue').grid(column=1, row=0)
+welcome_label = Label(
+    root, text="Welcome!", font=("Helvetica", 12), bg="lightsteelblue"
+).grid(column=1, row=0)
 
 
-def gui(): 
-        
+def gui():
+
     starts = []
     stops = []
     folders = [folder for folder in os.listdir(main_folder)]
-    
-    input_frame = Frame(root, bg='lightsteelblue')
+
+    input_frame = Frame(root, bg="lightsteelblue")
     input_frame.grid(column=0, row=1)
 
-    head_label = Label(input_frame, text='Filenames', bg='lightsteelblue')
+    head_label = Label(input_frame, text="Filenames", bg="lightsteelblue")
     head_label.grid(column=0, row=2, columnspan=3)
 
-    start_label = Label(input_frame, text='Time of first [h]', bg='lightsteelblue')
+    start_label = Label(input_frame, text="Time of first [h]", bg="lightsteelblue")
     start_label.grid(column=2, row=3)
 
-    stop_label = Label(input_frame, text='Time of last [h]', bg='lightsteelblue')    
+    stop_label = Label(input_frame, text="Time of last [h]", bg="lightsteelblue")
     stop_label.grid(column=3, row=3)
 
-    
     for index, folder in enumerate(folders):
-        row = index+5
-    
-        fold_label = Label(input_frame, text=folder, bg='lightsteelblue', width=5)
+        row = index + 5
+
+        fold_label = Label(input_frame, text=folder, bg="lightsteelblue", width=5)
         fold_label.grid(column=1, row=row)
-            
+
         start_entry = Entry(input_frame, borderwidth=3)
         start_entry.grid(column=2, row=row)
         starts.append(start_entry)
-    
+
         stop_entry = Entry(input_frame, borderwidth=3)
         stop_entry.grid(column=3, row=row)
         stops.append(stop_entry)
-            
-    sma_entry = Entry(input_frame, borderwidth=3)
-    sma_entry.grid(column=2, row=row+1)
 
-    sma_label = Label(input_frame, text='Weight of point in simple moving average',
-                                                          bg='lightsteelblue')
-    sma_label.grid(column=1, row=row+1)
-    
+    sma_entry = Entry(input_frame, borderwidth=3)
+    sma_entry.grid(column=2, row=row + 1)
+
+    sma_label = Label(
+        input_frame,
+        text="Weight of point in simple moving average",
+        bg="lightsteelblue",
+    )
+    sma_label.grid(column=1, row=row + 1)
+
     grow_entry = Entry(input_frame, borderwidth=3)
-    grow_entry.grid(column=2, row=row+2)
-    grow_label = Label(input_frame, text='Maximum growth', bg='lightsteelblue')
-    grow_label.grid(column=1, row=row+2)
-    
+    grow_entry.grid(column=2, row=row + 2)
+    grow_label = Label(input_frame, text="Maximum growth", bg="lightsteelblue")
+    grow_label.grid(column=1, row=row + 2)
+
     shrink_entry = Entry(input_frame, borderwidth=3)
-    shrink_entry.grid(column=2, row=row+3)
-    shrink_label = Label(input_frame, text='Maximum collaps', bg='lightsteelblue')
-    shrink_label.grid(column=1, row=row+3)
-    
+    shrink_entry.grid(column=2, row=row + 3)
+    shrink_label = Label(input_frame, text="Maximum collaps", bg="lightsteelblue")
+    shrink_label.grid(column=1, row=row + 3)
+
     def init():
-        
+
         import imp
+
         imp.reload(esat)
-        print('reloaded esat')
-        
+        print("reloaded esat")
+
         tstart = []
         teind = []
         for i in range(len(folders)):
@@ -87,30 +91,31 @@ def gui():
             weight = int(sma_entry.get())
             growth = float(grow_entry.get())
             shrink = float(shrink_entry.get())
-            esat.run(main_folder, tstart, teind, weight=weight, 
-                                                 growth=growth, 
-                                                 shrink=shrink)
+            esat.run(
+                main_folder, tstart, teind, weight=weight, growth=growth, shrink=shrink
+            )
         except ValueError:
             esat.run(main_folder, tstart, teind)
-            
-    run_but = Button(input_frame, text='Run analysis', borderwidth=3, command=init)
-    run_but.grid(column=3, row=row+1)
-    
+
+    run_but = Button(input_frame, text="Run analysis", borderwidth=3, command=init)
+    run_but.grid(column=3, row=row + 1)
+
     def restart():
-        
+
         new_main = filedialog.askdirectory()
         if new_main == main_folder:
             pass
-        else: 
+        else:
             for widget in input_frame.winfo_children():
                 widget.destroy()
             gui()
-        
+
     def help_text():
         help_frame = Frame(root, height=800, width=400)
         help_frame.grid(column=0, row=0)
-        help_label = Label(help_frame, text=
-       """Welcome to this Embryonic Structure Analysis Tool, or ESAT for short. To help you with this application, here are some basic instructions: 
+        help_label = Label(
+            help_frame,
+            text="""Welcome to this Embryonic Structure Analysis Tool, or ESAT for short. To help you with this application, here are some basic instructions: 
           With the button \'Open files\', under the Files menu, you can browse 
           through your computer to select the folder where the pictures you want 
           to be analysed are saved. 
@@ -149,32 +154,36 @@ def gui():
           the percentage of the collaps. Last a folder with the name [selected_folder]_analysed
           is added to the directory, which will contain a folder per embryo holding
           all of the images with the detected circles drawn in them, and a folder 
-          containing the plots of all embryos.""", 
-          font=('helvetica', 9), 
-          bg='lightsteelblue').grid(column=1, row=0)
-            
-        back_button = Button(help_frame, text='Back to analysis', bg='lightsteelblue', 
-                             command=help_frame.destroy)
+          containing the plots of all embryos.""",
+            font=("helvetica", 9),
+            bg="lightsteelblue",
+        ).grid(column=1, row=0)
+
+        back_button = Button(
+            help_frame,
+            text="Back to analysis",
+            bg="lightsteelblue",
+            command=help_frame.destroy,
+        )
         back_button.grid(column=0, row=0)
-        
-    root.option_add('*tearOff', FALSE)
+
+    root.option_add("*tearOff", FALSE)
     menu = Menu(root)
-    root.config(menu = menu)
-    
+    root.config(menu=menu)
+
     subfile = Menu(menu)
-    menu.add_cascade(menu=subfile, label='Folders')
-    subfile.add_command(label='open', command=restart)
-    #subfile.add_command(label='close', command = restart_program) 
-    #optie: change file als blijkt dat cirkel niet goed is
-    
-    #sub-dropdown-menu
+    menu.add_cascade(menu=subfile, label="Folders")
+    subfile.add_command(label="open", command=restart)
+    # subfile.add_command(label='close', command = restart_program)
+    # optie: change file als blijkt dat cirkel niet goed is
+
+    # sub-dropdown-menu
     subhelp = Menu(menu)
-    menu.add_cascade(menu=subhelp, label='Help')
-    subhelp.add_command(label='Help', command=help_text) 
-    #helpfunctie koppelen aan dit submenu 
- 
-    
-    
+    menu.add_cascade(menu=subhelp, label="Help")
+    subhelp.add_command(label="Help", command=help_text)
+    # helpfunctie koppelen aan dit submenu
+
+
 gui()
 root.mainloop()
 
@@ -189,15 +198,4 @@ def gridit(item, row, column):
 25- 8.8/50.8
 31- 1.4/23.2
 5- 18.5/ 43.4
-"""
-      
-
-""""
-Improvements:
--peak valley detection
--web-app
--Folder selection error handling
--icon
--deep learning?
--extra- and interpolation to create 3d images
 """
