@@ -4,9 +4,10 @@ Created on Wed Oct 21 10:56:48 2020
 
 @author: Nassim
 """
+import os
+
 import cv2
 import numpy as np
-import os
 
 
 def run(main_folder, tstart, teind, weight=10, growth=2, shrink=2):
@@ -32,8 +33,9 @@ def run(main_folder, tstart, teind, weight=10, growth=2, shrink=2):
     export_sheet_2 = export.add_worksheet("Slope")
     column = 0
 
-    import analysis
     import imp
+
+    import analysis
 
     imp.reload(analysis)
     print("reloaded analysis")
@@ -85,9 +87,9 @@ def files(route, img_path):
     Function that searches for all the files inside the folder route, then passes
     the files to the circle detector and retrieves the radius of the
     """
+    surfaces = []
     for dirpath, _, files in os.walk(route):  # open een van de 7 folders
         file_counter = 0
-        surfaces = []
         r = 0
         for file_name in files:  # Zoek fotos per folder
             file_path = os.path.join(dirpath, file_name)  # Voeg path en file_name samen
