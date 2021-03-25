@@ -57,9 +57,7 @@ def run(main_folder, tstart, teind, weight=10, growth=2, shrink=2):
                 e - 2 * stepsize
                 for e in np.linspace(tstart[i], teind[i] + 2 * stepsize, len(results))
             ]
-        #        print(results + 'pre-clean')
-        #        results, x_results, removed = cleaner(results, x , growth, shrink)
-        #        print(results + 'post-clean')
+
         export_sheet.write(column + 2, 0, "Removed data points [hour]", bold)
         #        for ind, e in enumerate(removed):
         #            export_sheet.write(column+2, ind+1, np.around(x[e-1], decimals=1), red)
@@ -102,12 +100,15 @@ def files(route, img_path):
             else:
                 file_counter += 1
                 max_rad = 180
-
-            r, center, s, img = detect_circle(image, min_rad, max_rad)
-            surfaces.append(s)
-            img_file = os.path.join(img_path, str(file_counter))
-            cv2.imwrite(img_file + ".png", img)
-            cv2.waitKey(0)
+            
+            result = detect_circle(image, min_rad, max_rad)
+            if result:
+                r, center, s, img = result
+                surfaces.append(s)
+                img_file = os.path.join(img_path, str(file_counter))
+                cv2.imwrite(img_file + ".png", img)
+                cv2.waitKey(0)
+                
     return surfaces
 
 
@@ -128,10 +129,10 @@ def detect_circle(img, min_radius, max_radius, p1=200, p2=100):
             minRadius=min_radius,
             maxRadius=max_radius,
         )
+
         if detect_circles is not None:
             detect_circles_rounded = np.uint16(np.around(detect_circles))
             for i in detect_circles_rounded[0, :]:
-                if (100 <= i[0] <= 400) & (100 <= i[1] <= 400):
                     cv2.circle(img, (i[0], i[1]), i[2], (255), 5)  # Teken cirkel
                     rad = convert_pixels_to_micrometers(i[2])
                     ar = round(area(rad))
