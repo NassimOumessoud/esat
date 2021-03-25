@@ -41,7 +41,6 @@ def run(main_folder, tstart, teind, weight=10, growth=2, shrink=2):
     print("reloaded analysis")
 
     for i, sub_folder in enumerate(os.listdir(main_folder)):  # open main folder
-        print(tstart, teind)
         img_folder = f"Circles_{sub_folder}"
         img_path = os.path.join(path, img_folder)
         os.makedirs(img_path, exist_ok=True)
@@ -105,7 +104,6 @@ def files(route, img_path):
             result = detect_circle(image, min_rad, max_rad)
             if result:
                 r, center, s, img = result
-                print(r*2)
                 surfaces.append(s)
                 img_file = os.path.join(img_path, str(file_counter))
                 cv2.imwrite(img_file + ".png", img)
