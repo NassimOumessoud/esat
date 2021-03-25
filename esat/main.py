@@ -82,9 +82,16 @@ def main():
 
         tstart = []
         teind = []
-        # for i in range(len(folders)):
-        #     tstart.append(float(starts[i].get()))
-        #     teind.append(float(stops[i].get()))
+        if len(folders) == 0:
+            print('One folder found')
+            tstart.append(float(starts[0].get()))
+            teind.append(float(stops[0].get()))
+            
+        else:
+            for i in range(len(folders)):
+                print('Multiple folders found')
+                tstart.append(float(starts[i].get()))
+                teind.append(float(stops[i].get()))
         try:
             weight = int(sma_entry.get())
             growth = float(grow_entry.get())
@@ -187,7 +194,7 @@ def main():
 def gridit(item, row, column):
     item.grid(column=column, row=row)
 
-
+main()
 """
 15- 37.1/50.7
 20- 3/29.3
