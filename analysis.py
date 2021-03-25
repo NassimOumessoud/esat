@@ -31,8 +31,14 @@ def analyse(result, workbook, sheet, sheet_2, exc_index, name, weight, x_result,
     start = np.around(popt[1], decimals=2)
     lin_fit = fit(x_result, popt[0], popt[1])
     
-    plot(result, sma, x_sma, valleys, peaks, collapses, lin_fit, rises, x_result,
-                                                              name, path)
+    plot(name, path,
+         Measured=[x_result, result],
+         Valleys=valleys,
+         Peaks=peaks, 
+         SMA=[x_sma, sma],
+         Fit=[x_result, lin_fit])
+         
+                                                              
     to_excel(result, slope, start, workbook, sheet, sheet_2, exc_index, name,
              collapses, rises, x_result)    
 
@@ -115,22 +121,32 @@ def peak_valley_change(x_valleys, y_valleys, x_peaks, y_peaks):
     return collapses, rises
 
 
-def plot(data, trend, x_trend, data_1, data_2, data_3, data_4, data_5, x_data, 
-         name, path):
+def plot(name, path, **kwargs):
     """
-    Function that plots all data
+    Function that plots all given data, only that the data is inserted as:
+    data=[x_data, y_data].
+    Colors and linetypes can be adjusted by adjusting the colors and lintypes
+    lists.
     """
+    #order=Measured, Valleys, Peaks, SMA, Fit
     colors = ['g', 'r', 'y', 'b', 'c', 'm', 'k', 'w']
+    lintypes = ['-', 'o', 'o', '-', '--']
+    i = 0
+    for result, data in kwargs.items():
+        plt.plot(data[0], data[1], lintypes[i], color=colors[i], label=str(result))
+        i += 1
+        
+#        plt.plot(x_data, data, '-', color = 'k', label='Measured')
+#        plt.plot(x_trend, trend, '.-', lw=4, color = 'g', label = 'Simple moving average')
+#        
+#        plt.plot(data_1[0], data_1[1], 'o', color='r', label='Valley')
+#        plt.plot(data_2[0], data_2[1], 'o', color = 'm', label='Peak')
+#        plt.plot(x_data, data_4, '--', lw=2, color='r', label='Fitted function')
     
-    plt.plot(x_data, data, '-', color = 'k', label='Measured')
-    plt.plot(x_trend, trend, '.-', lw=4, color = 'g', label = 'Simple moving average')
+    plt.title('Surface area of blastocyt in the '+ name +' folder')
     plt.xlabel('Time [h]')
     plt.ylabel('Surface area [mu meter]')
     plt.title('plot')
-    plt.title('Surface area of blastocyt in the '+ name +' folder')
-    plt.plot(data_1[0], data_1[1], 'o', color='r', label='Valley')
-    plt.plot(data_2[0], data_2[1], 'o', color = 'm', label='Peak')
-    plt.plot(x_data, data_4, '--', lw=2, color='r', label='linear fit')
     plt.legend()
     plt.grid()
     

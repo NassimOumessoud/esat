@@ -34,24 +34,19 @@ def run(main_folder, tstart, teind, weight=10, growth=2, shrink=2):
     import imp
     imp.reload(analysis)
     print('reloaded analysis')
-    
     for i, sub_folder in enumerate(os.listdir(main_folder)):                        #open main folder
+        print(sub_folder)
         img_folder = f'Circles_{sub_folder}'
         img_path = os.path.join(path, img_folder)
         os.makedirs(img_path, exist_ok=True)
         route = os.path.join(main_folder, sub_folder)
         results = files(route, img_path)
-        
         _, stepsize = np.linspace(tstart[i], teind[i], len(results), retstep=True)
         x = [e-stepsize for e in np.linspace(tstart[i], teind[i]+stepsize, len(results))]
         if x[0] != tstart[i]:
             x = [e-2*stepsize for e in np.linspace(tstart[i], teind[i]+2*stepsize, len(results))]
-#        print(results + 'pre-clean')
-#        results, x_results, removed = cleaner(results, x , growth, shrink)
-#        print(results + 'post-clean')
         export_sheet.write(column+2, 0, 'Removed data points [hour]', bold)
-#        for ind, e in enumerate(removed): 
-#            export_sheet.write(column+2, ind+1, np.around(x[e-1], decimals=1), red)
+
             
         analysis.analyse(results, export, 
                             export_sheet, export_sheet_2,
@@ -76,6 +71,7 @@ def files(route, img_path):
         r = 0
         for file_name in files:                             #Zoek fotos per folder
             file_path = os.path.join(dirpath, file_name)         #Voeg path en file_name samen
+            print(file_path)
             mid = len(files)/2
             image = cv2.imread(file_path, 0)                      #Lees image via path in zwart\wit
             min_rad = int(round(r*0.8))
@@ -91,6 +87,7 @@ def files(route, img_path):
             img_file = os.path.join(img_path, str(file_counter))
             cv2.imwrite(img_file+'.png', img)
             cv2.waitKey(0)
+           
     return surfaces
 
     
@@ -106,15 +103,17 @@ def detect_circle(img, min_radius, max_radius, p1=200, p2=100):
                                                           param2=p/2,
                                                           minRadius=min_radius,
                                                           maxRadius=max_radius)                                                         
-        if detect_circles is not None:
-            detect_circles_rounded = np.uint16(np.around(detect_circles))
-            for i in detect_circles_rounded[0, :]:
+        try:
+            detect_circles_rounded = np.round(detect_circles[0, :]).astype("int")
+            for i in detect_circles_rounded:
+                #print(2*i[2]/3)
                 if (100 <= i[0] <= 400) & (100 <= i[1] <= 400):
                     cv2.circle(img, (i[0],i[1]), i[2], (255), 5) #Teken cirkel
                     rad = convert_pixels_to_micrometers(i[2])
+#                        print(rad*2)
                     ar = round(area(rad))
                     return rad, (i[0], i[1]), ar, img
-        else:
+        except TypeError:
             continue
            
     
