@@ -1,3 +1,3 @@
-from .main import main
+from .cli import execute_from_cli
 
-main()
+execute_from_cli()
