@@ -49,6 +49,7 @@ def simple_moving_average(values, window):      #valley and peak detection
     """
     weight = np.repeat(1/(window), window)
     simple_moving_av = np.convolve(values, weight, 'valid')
+    
     return simple_moving_av
 
 

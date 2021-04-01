@@ -79,13 +79,16 @@ def main():
 
         imp.reload(esat)
         print("reloaded esat")
-
         tstart = []
         teind = []
+        
         if len(folders) == 0:
             print('One folder found')
-            tstart.append(float(starts[0].get()))
-            teind.append(float(stops[0].get()))
+            
+            start = float(starts[0].get())
+            stop = float(stops[0].get())
+            tstart.append(start)
+            teind.append(stop)
             
         else:
             for i in range(len(folders)):

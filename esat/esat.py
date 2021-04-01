@@ -10,7 +10,7 @@ import cv2
 import numpy as np
 
 
-def run(main_folder, tstart, teind, weight=10, growth=2, shrink=2):
+def run(main_folder, t_start, t_end, weight=10, growth=2, shrink=2):
     """
     Main function that controls the circle analysis and passes the resluts to
     the analysis file.
@@ -23,6 +23,7 @@ def run(main_folder, tstart, teind, weight=10, growth=2, shrink=2):
     os.makedirs(path, exist_ok=True)
     output_name = f"{main_folder}_results.xlsx"
     output_path = os.path.join(path, output_name)
+    
 
     import xlsxwriter
 
@@ -47,15 +48,15 @@ def run(main_folder, tstart, teind, weight=10, growth=2, shrink=2):
         route = os.path.join(main_folder, sub_folder)
         results = files(route, img_path)
 
-        _, stepsize = np.linspace(tstart[i], teind[i], len(results), retstep=True)
+        _, stepsize = np.linspace(t_start[i], t_end[i], len(results), retstep=True)
         x = [
             e - stepsize
-            for e in np.linspace(tstart[i], teind[i] + stepsize, len(results))
+            for e in np.linspace(t_start[i], t_end[i] + stepsize, len(results))
         ]
-        if x[0] != tstart[i]:
+        if x[0] != t_start[i]:
             x = [
                 e - 2 * stepsize
-                for e in np.linspace(tstart[i], teind[i] + 2 * stepsize, len(results))
+                for e in np.linspace(t_start[i], t_end[i] + 2 * stepsize, len(results))
             ]
 
         export_sheet.write(column + 2, 0, "Removed data points [hour]", bold)
@@ -88,23 +89,23 @@ def files(route, img_path):
     surfaces = []
     for dirpath, _, files in os.walk(route):  # open een van de 7 folders
         file_counter = 0
-        r = 0
+        radius = 0
         for file_name in files:  # Zoek fotos per folder
             file_path = os.path.join(dirpath, file_name)  # Voeg path en file_name samen
             mid = len(files) / 2
             image = cv2.imread(file_path, 0)  # Lees image via path in zwart\wit
-            min_rad = int(round(r * 0.8))
+            min_rad = int(round(radius * 0.8))
             if file_counter <= mid:
                 file_counter += 1
                 max_rad = 120  # telt het aantal fotos
             else:
                 file_counter += 1
                 max_rad = 180
-            
             result = detect_circle(image, min_rad, max_rad)
             if result:
-                r, center, s, img = result
-                surfaces.append(s)
+                radius, center, surface, img = result
+                surfaces.append(surface)
+                
                 img_file = os.path.join(img_path, str(file_counter))
                 cv2.imwrite(img_file + ".png", img)
                 cv2.waitKey(0)
@@ -118,8 +119,10 @@ def detect_circle(img, min_radius, max_radius, p1=200, p2=100):
     refer to the canny edge detection that the HoughCircles uses to detect the
     circles.
     """
+ 
     for p in range(p1, p2, -10):
-        detect_circles = cv2.HoughCircles(
+
+        detected_circles = cv2.HoughCircles(
             img,
             cv2.HOUGH_GRADIENT,
             1.5,
@@ -127,16 +130,16 @@ def detect_circle(img, min_radius, max_radius, p1=200, p2=100):
             param1=p,
             param2=p / 2,
             minRadius=min_radius,
-            maxRadius=max_radius,
-        )
+            maxRadius=max_radius)
+        
 
-        if detect_circles is not None:
-            detect_circles_rounded = np.uint16(np.around(detect_circles))
-            for i in detect_circles_rounded[0, :]:
+        if detected_circles is not None:
+            detected_circles_rounded = np.uint16(np.around(detected_circles))
+            for i in detected_circles_rounded[0, :]:
                     cv2.circle(img, (i[0], i[1]), i[2], (255), 5)  # Teken cirkel
-                    rad = convert_pixels_to_micrometers(i[2])
-                    ar = round(area(rad))
-                    return rad, (i[0], i[1]), ar, img
+                    radius = convert_pixels_to_micrometers(i[2])
+                    area = round(circular_area(radius))
+                    return radius, (i[0], i[1]), area, img
         else:
             continue
 
@@ -145,10 +148,10 @@ def convert_pixels_to_micrometers(pixels):
     """
     Converts pixels to micrometers with a resolution of 3 pixels/micrometer
     """
-    return pixels / 3  # aantal micrometer
+    return pixels / 1.875  # aantal micrometer
 
 
-def area(radius):
+def circular_area(radius):
     """
     Uses the radius of a circle to determine its surface area
     """
