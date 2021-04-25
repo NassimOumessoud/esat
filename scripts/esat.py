@@ -46,7 +46,7 @@ def run(main_folder, times, weight=10, growth=2, shrink=2):
             img_path = os.path.join(path, img_folder)
             os.makedirs(img_path, exist_ok=True)
             route = item_path     #route for a folder
-            process(route, img_path, times, 
+            process(route, img_path, path, times, 
                     item, excel, i=i, col=column)
             column += 4
             
@@ -56,7 +56,7 @@ def run(main_folder, times, weight=10, growth=2, shrink=2):
             img_path = os.path.join(path, img_folder)
             os.makedirs(img_path, exist_ok=True)
             route = main_folder                        #route for the only folder
-            process(route, img_path, times, main_folder, excel)
+            process(route, img_path, path, times, main_folder, excel)
             break
         
     t2 = time.time()
@@ -64,10 +64,10 @@ def run(main_folder, times, weight=10, growth=2, shrink=2):
     print("Deze analyse duurde totaal %.3f minuten" % (dt / 60))
 
 
-def process(route, img_path, times, folder, excel, i=0, col=0):
+def process(route, img_path, output_path, times, folder, excel, i=0, col=0):
     
             results = files(route, img_path)
-            print(times)
+            
             t_start, t_end = times
             x = [
                  round(e, 1)
@@ -77,7 +77,7 @@ def process(route, img_path, times, folder, excel, i=0, col=0):
             import imp
             imp.reload(analysis)
             print("reloaded analysis")
-            analysis.analyse(results, x, folder, img_path, excel, col)
+            analysis.analyse(results, x, folder, output_path, excel, col)
             
 
 def files(route, img_path):
@@ -94,7 +94,7 @@ def files(route, img_path):
             mid = len(files) / 2
             image = cv2.imread(file_path, 0)  
             min_rad = int(round(radius * 0.8))
-            max_rad = int(round(radius*2))
+            max_rad = 180
             result = detect_circle(image, min_rad, max_rad)
             if result:
                 radius, center, size, img = result

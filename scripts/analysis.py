@@ -176,6 +176,7 @@ def plot(name, path, **kwargs):
     i = 0
     for result, data in kwargs.items():
         plt.plot(data[0], data[1], lintypes[i], color=colors[i], label=str(result))
+        plt.xlim(left=data[0][0])
         i += 1
         
     

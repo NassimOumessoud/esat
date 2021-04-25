@@ -95,7 +95,7 @@ def main():
                 print('Multiple folders found')
                 t_start.append(float(starts[i].get()))
                 t_end.append(float(stops[i].get()))
-                print([t_start, t_end])
+                
             times = [t_start, t_end]
         
         try:
@@ -105,6 +105,7 @@ def main():
             esat.run(
                 main_folder, times, weight=weight, growth=growth, shrink=shrink
             )
+            
         except ValueError:
             esat.run(main_folder, times)
 
