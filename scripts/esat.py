@@ -1,14 +1,19 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Wed Oct 21 10:56:48 2020
-
-@author: Nassim
-"""
 import os
-
 import cv2
 import numpy as np
 
+
+def init_excel(main_folder, path):
+    import xlsxwriter
+    output_name = f"{main_folder}_results.xlsx"
+    output_path = os.path.join(path, output_name)
+    workbook = xlsxwriter.Workbook(f"{output_path}")
+    bold = workbook.add_format({"bold": True})
+    red = workbook.add_format({"font_color": "red"})
+    sheet = workbook.add_worksheet("Surface area")
+    sheet_2 = workbook.add_worksheet("Slope")
+    
+    return workbook, sheet, sheet_2
 
 def run(main_folder, t_start, t_end, weight=10, growth=2, shrink=2):
     """
@@ -18,60 +23,55 @@ def run(main_folder, t_start, t_end, weight=10, growth=2, shrink=2):
     import time
 
     t1 = time.time()
-    directory = f"{main_folder}_analysed"
-    path = os.path.join(main_folder, directory)
+    output_directory = f"{main_folder}_analysed"
+    path = os.path.join(main_folder, output_directory)
     os.makedirs(path, exist_ok=True)
-    output_name = f"{main_folder}_results.xlsx"
-    output_path = os.path.join(path, output_name)
-    
-
-    import xlsxwriter
-
-    export = xlsxwriter.Workbook(f"{output_path}")
-    bold = export.add_format({"bold": True})
-    red = export.add_format({"font_color": "red"})
-    export_sheet = export.add_worksheet("Surface area")
-    export_sheet_2 = export.add_worksheet("Slope")
     
 
     import imp
-
     import analysis
 
     imp.reload(analysis)
     print("reloaded analysis")
-    
 
         
     column = 0
-    for i, sub_folder in enumerate(os.listdir(main_folder)):  # open main folder
+    for i, item in enumerate(os.listdir(main_folder)):
         
-        if os.path.isdir(sub_folder):
-            print('Sub_folder is a folder')
-            img_folder = f"Circles_{sub_folder}"
+        if os.path.isdir(item):
+            print('Item is a folder')
+            img_folder = f"Circles_{item}"
             img_path = os.path.join(path, img_folder)
             os.makedirs(img_path, exist_ok=True)
-            route = os.path.join(main_folder, sub_folder)
+            route = os.path.join(main_folder, item)     #route for a folder
+            process(route, img_path, t_start, t_end, i=i)
+            column += 4
             
-            
-        elif os.path.isfile(sub_folder):
-            print('Sub_folder is a file')
+        elif os.path.isfile(item):
+            print('Item is a file')
             img_folder = f"Circles_{main_folder}"
             img_path = os.path.join(path, img_folder)
             os.makedirs(img_path, exist_ok=True)
-            route = os.path.join(main_folder, sub_folder)
-def process()
+            route = main_folder                        #route for the only folder
+            process(route, img_path, t_start, t_end)
+            break
+    
+
+def process(route, img_path, t_start, t_end, i=0):
+    
             results = files(route, img_path)
-            print('I got results!')  
+            print('I got results!') 
+            
             x = [
-                    round(e, 1)
-                    for e in np.linspace(t_start[i], t_end[i], len(results))
-                    ]
+                 round(e, 1)
+                 for e in np.linspace(t_start[i], t_end[i], len(results))
+                 ]
 
 #        export_sheet.write(column + 2, 0, "Removed data points [hour]", bold)
         #        for ind, e in enumerate(removed):
         #            export_sheet.write(column+2, ind+1, np.around(x[e-1], decimals=1), red)
-
+            
+            
             analysis.analyse(
                 results,
                 export,
@@ -83,8 +83,9 @@ def process()
                 x,
                 path,
             )
-            column += 4
-            export.close()
+            
+            
+            workbook.close()
             t2 = time.time()
             dt = t2 - t1
             print("Deze analyse duurde totaal %.3f minuten" % (dt / 60))
@@ -104,8 +105,7 @@ def files(route, img_path):
             mid = len(files) / 2
             image = cv2.imread(file_path, 0)  # Lees image via path in zwart\wit
             min_rad = int(round(radius * 0.8))
-            min_rad = 200
-            max_rad = 500
+            max_rad = int(round(radius * 1.5))
             result = detect_circle(image, min_rad, max_rad)
             if result:
                 radius, center, surface, img = result
