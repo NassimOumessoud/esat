@@ -7,8 +7,52 @@ Created on Thu Jan 14 11:31:40 2021
 
 import matplotlib.pyplot as plt
 import numpy as np
+import xlsxwriter
+import os
 
 
+class Excel:
+    
+    def __init__(self, folder, path):
+        
+        self.folder = folder
+        self.path = path
+        output_name = f"{self.folder}_results.xlsx"
+        output_path = os.path.join(self.path, output_name)
+        self.workbook = xlsxwriter.Workbook(f"{output_path}")
+        self.bold = self.workbook.add_format({"bold": True})
+        self.red = self.workbook.add_format({"font_color": "red"})
+        self.sheet = self.workbook.add_worksheet("Surface area")
+        self.sheet_2 = self.workbook.add_worksheet("Slope")
+        
+        
+    
+    def write_excel(self, data, slope_data, start_data, excel_index, name,
+             collapses, rises, time):
+        """
+        Function that writes all data in an excel file which will be stored in the same 
+        directory as the main_folder from main.py.
+        """
+        
+        bold = self.workbook.add_format({'bold': True})
+        
+        self.sheet.write(excel_index, 0, 'Time [hours]', bold)
+        self.sheet.write(excel_index+1, 0, f'Folder {name} [micrometer^2]', bold)
+        for i in range(len(data)):
+            self.sheet.write(excel_index+1, i+1, data[i])
+            self.sheet.write(excel_index, i+1, np.around(time[i], decimals=1))
+            
+        self.sheet_2.write(0, 0, 'Files', bold)
+        self.sheet_2.write(0, 1, 'Slope [micrometer^2/hour]', bold)
+        self.sheet_2.write(excel_index+1, 0, f'{name}', bold)
+        self.sheet_2.write(excel_index+1, 1, slope_data)
+        self.sheet_2.write(excel_index+1, 2, start_data)
+        
+        for i, collaps in enumerate(collapses):
+            self.sheet_2.write(excel_index+2, 0, 'Collapses ->')
+            self.sheet_2.write(excel_index+2, i+1, collaps)
+        
+        
 def analyse(result, x_result, name, path, excel, excel_index):
     """
     Initialisation function for the analysis of given data
@@ -36,10 +80,8 @@ def analyse(result, x_result, name, path, excel, excel_index):
          Peaks=peaks, 
          SMA=[x_sma, sma],
          Fit=[x_result, lin_fit])
-         
-                                                              
-    write_excel(result, slope, start, excel, excel_index, name,
-             collapses, rises, x_result)    
+
+    excel.write_excel(result, slope, start, excel_index, name, collapses, rises, x_result)    
 
 
 def simple_moving_average(values, window):      #valley and peak detection
@@ -153,32 +195,3 @@ def plot(name, path, **kwargs):
     save_path = os.path.join(plot_dir_path, fig_name)
     plt.savefig(save_path)
     plt.close()
-    
-    
-def write_excel(data, slope_data, start_data, excel, excel_index, name,
-             collapses, rises, time):
-    """
-    Function that writes all data in an excel file which will be stored in the same 
-    directory as the main_folder from main.py.
-    """
-    workbook, sheet, sheet_2 = excel
-    bold = workbook.add_format({'bold': True})
-    
-    sheet.write(excel_index, 0, 'Time [hours]', bold)
-    sheet.write(excel_index+1, 0, f'Folder {name} [micrometer^2]', bold)
-    for i in range(len(data)):
-        sheet.write(excel_index+1, i+1, data[i])
-        sheet.write(excel_index, i+1, np.around(time[i], decimals=1))
-        
-    sheet_2.write(0, 0, 'Files', bold)
-    sheet_2.write(0, 1, 'Slope [micrometer^2/hour]', bold)
-    sheet_2.write(excel_index+1, 0, f'{name}', bold)
-    sheet_2.write(excel_index+1, 1, slope_data)
-    sheet_2.write(excel_index+1, 2, start_data)
-    
-    for i, collaps in enumerate(collapses):
-        sheet_2.write(excel_index+2, 0, 'Collapses ->')
-        sheet_2.write(excel_index+2, i+1, collaps)
-    
-        
-    

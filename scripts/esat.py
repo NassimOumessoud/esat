@@ -2,7 +2,7 @@ import os
 import cv2
 import numpy as np
 import xlsxwriter
-
+import analysis
 
 def pixels_to_micrometers(pixels, image):
     """
@@ -22,18 +22,6 @@ def circular_area(radius):
     return np.pi * (radius ** 2)
 
 
-def init_excel(main_folder, path):
-    
-    output_name = f"{main_folder}_results.xlsx"
-    output_path = os.path.join(path, output_name)
-    workbook = xlsxwriter.Workbook(f"{output_path}")
-    bold = workbook.add_format({"bold": True})
-    red = workbook.add_format({"font_color": "red"})
-    sheet = workbook.add_worksheet("Surface area")
-    sheet_2 = workbook.add_worksheet("Slope")
-    
-    return workbook, sheet, sheet_2
-
 def run(main_folder, t_start, t_end, weight=10, growth=2, shrink=2):
     """
     Main function that controls the circle analysis and passes the resluts to
@@ -46,6 +34,7 @@ def run(main_folder, t_start, t_end, weight=10, growth=2, shrink=2):
     path = os.path.join(main_folder, output_directory)
     os.makedirs(path, exist_ok=True)
         
+    excel = analysis.Excel(main_folder, path)
     column = 0
     for i, item in enumerate(os.listdir(main_folder)):
         
@@ -57,7 +46,6 @@ def run(main_folder, t_start, t_end, weight=10, growth=2, shrink=2):
             img_path = os.path.join(path, img_folder)
             os.makedirs(img_path, exist_ok=True)
             route = item_path     #route for a folder
-            excel = init_excel(main_folder, img_path)
             process(route, img_path, t_start, t_end, 
                     item, excel, i=i, col=column)
             column += 4
@@ -68,7 +56,6 @@ def run(main_folder, t_start, t_end, weight=10, growth=2, shrink=2):
             img_path = os.path.join(path, img_folder)
             os.makedirs(img_path, exist_ok=True)
             route = main_folder                        #route for the only folder
-            excel = init_excel(main_folder, img_path)
             process(route, img_path, t_start, t_end, main_folder, excel)
             break
         
@@ -88,7 +75,7 @@ def process(route, img_path, t_start, t_end, folder, excel, i=0, col=0):
                  ]        
             
             import imp
-            import analysis
+            
             imp.reload(analysis)
             print("reloaded analysis")
             
