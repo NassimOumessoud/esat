@@ -8,13 +8,12 @@ Created on Thu Jan 14 11:31:40 2021
 import matplotlib.pyplot as plt
 import numpy as np
 
-          
-def analyse(result, workbook, sheet, sheet_2, exc_index, name, weight, x_result,
-            path):
+
+def analyse(result, x_result, name, path, excel, excel_index):
     """
     Initialisation function for the analysis of given data
     """
-    
+    weight = 10
     sma = simple_moving_average(result, weight)
     x_sma = x_result[0:1-weight]
     valleys, peaks = peaks_and_valleys(x_sma, sma)
@@ -39,7 +38,7 @@ def analyse(result, workbook, sheet, sheet_2, exc_index, name, weight, x_result,
          Fit=[x_result, lin_fit])
          
                                                               
-    to_excel(result, slope, start, workbook, sheet, sheet_2, exc_index, name,
+    write_excel(result, slope, start, excel, excel_index, name,
              collapses, rises, x_result)    
 
 
@@ -156,28 +155,30 @@ def plot(name, path, **kwargs):
     plt.close()
     
     
-def to_excel(data, slope_data, start_data, workbook, sheet, sheet_2, exc_index, name,
+def write_excel(data, slope_data, start_data, excel, excel_index, name,
              collapses, rises, time):
     """
     Function that writes all data in an excel file which will be stored in the same 
     directory as the main_folder from main.py.
     """
+    workbook, sheet, sheet_2 = excel
     bold = workbook.add_format({'bold': True})
     
-    sheet.write(exc_index, 0, 'Time [hours]', bold)
-    sheet.write(exc_index+1, 0, f'Folder {name} [micrometer^2]', bold)
+    sheet.write(excel_index, 0, 'Time [hours]', bold)
+    sheet.write(excel_index+1, 0, f'Folder {name} [micrometer^2]', bold)
     for i in range(len(data)):
-        sheet.write(exc_index+1, i+1, data[i])
-        sheet.write(exc_index, i+1, np.around(time[i], decimals=1))
+        sheet.write(excel_index+1, i+1, data[i])
+        sheet.write(excel_index, i+1, np.around(time[i], decimals=1))
         
     sheet_2.write(0, 0, 'Files', bold)
     sheet_2.write(0, 1, 'Slope [micrometer^2/hour]', bold)
-    sheet_2.write(exc_index+1, 0, f'{name}', bold)
-    sheet_2.write(exc_index+1, 1, slope_data)
-    sheet_2.write(exc_index+1, 2, start_data)
+    sheet_2.write(excel_index+1, 0, f'{name}', bold)
+    sheet_2.write(excel_index+1, 1, slope_data)
+    sheet_2.write(excel_index+1, 2, start_data)
+    
     for i, collaps in enumerate(collapses):
-        sheet_2.write(exc_index+2, 0, 'Collapses ->')
-        sheet_2.write(exc_index+2, i+1, collaps)
+        sheet_2.write(excel_index+2, 0, 'Collapses ->')
+        sheet_2.write(excel_index+2, i+1, collaps)
     
         
     

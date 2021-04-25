@@ -116,7 +116,7 @@ def main():
         else:
             for widget in input_frame.winfo_children():
                 widget.destroy()
-            gui()
+            main()
 
     def help_text():
         help_frame = Frame(root, height=800, width=400)

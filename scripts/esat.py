@@ -1,10 +1,29 @@
 import os
 import cv2
 import numpy as np
+import xlsxwriter
+
+
+def pixels_to_micrometers(pixels, image):
+    """
+    Converts pixels to micrometers with a resolution of 3 pixels/micrometer
+    """
+    if len(image) == 800:
+        c = 3
+    else:
+        c = 1.6
+    return pixels / c  # aantal micrometer
+
+
+def circular_area(radius):
+    """
+    Uses the radius of a circle to determine its surface area
+    """
+    return np.pi * (radius ** 2)
 
 
 def init_excel(main_folder, path):
-    import xlsxwriter
+    
     output_name = f"{main_folder}_results.xlsx"
     output_path = os.path.join(path, output_name)
     workbook = xlsxwriter.Workbook(f"{output_path}")
@@ -26,38 +45,39 @@ def run(main_folder, t_start, t_end, weight=10, growth=2, shrink=2):
     output_directory = f"{main_folder}_analysed"
     path = os.path.join(main_folder, output_directory)
     os.makedirs(path, exist_ok=True)
-    
-
-    import imp
-    import analysis
-
-    imp.reload(analysis)
-    print("reloaded analysis")
-
         
     column = 0
     for i, item in enumerate(os.listdir(main_folder)):
         
-        if os.path.isdir(item):
+        item_path = os.path.join(main_folder, item)
+        
+        if os.path.isdir(item_path):
             print('Item is a folder')
             img_folder = f"Circles_{item}"
             img_path = os.path.join(path, img_folder)
             os.makedirs(img_path, exist_ok=True)
-            route = os.path.join(main_folder, item)     #route for a folder
-            process(route, img_path, t_start, t_end, i=i)
+            route = item_path     #route for a folder
+            excel = init_excel(main_folder, img_path)
+            process(route, img_path, t_start, t_end, 
+                    item, excel, i=i, col=column)
             column += 4
             
-        elif os.path.isfile(item):
+        elif os.path.isfile(item_path):
             print('Item is a file')
             img_folder = f"Circles_{main_folder}"
             img_path = os.path.join(path, img_folder)
             os.makedirs(img_path, exist_ok=True)
             route = main_folder                        #route for the only folder
-            process(route, img_path, t_start, t_end)
+            excel = init_excel(main_folder, img_path)
+            process(route, img_path, t_start, t_end, main_folder, excel)
             break
-    
+        
+    t2 = time.time()
+    dt = t2 - t1
+    print("Deze analyse duurde totaal %.3f minuten" % (dt / 60))
 
-def process(route, img_path, t_start, t_end, i=0):
+
+def process(route, img_path, t_start, t_end, folder, excel, i=0, col=0):
     
             results = files(route, img_path)
             print('I got results!') 
@@ -65,31 +85,16 @@ def process(route, img_path, t_start, t_end, i=0):
             x = [
                  round(e, 1)
                  for e in np.linspace(t_start[i], t_end[i], len(results))
-                 ]
-
-#        export_sheet.write(column + 2, 0, "Removed data points [hour]", bold)
-        #        for ind, e in enumerate(removed):
-        #            export_sheet.write(column+2, ind+1, np.around(x[e-1], decimals=1), red)
+                 ]        
             
+            import imp
+            import analysis
+            imp.reload(analysis)
+            print("reloaded analysis")
             
-            analysis.analyse(
-                results,
-                export,
-                export_sheet,
-                export_sheet_2,
-                column,
-                sub_folder,
-                weight,
-                x,
-                path,
-            )
+            analysis.analyse(results, x, folder, img_path, excel, col)
+#            workbook.close()
             
-            
-            workbook.close()
-            t2 = time.time()
-            dt = t2 - t1
-            print("Deze analyse duurde totaal %.3f minuten" % (dt / 60))
-
 
 def files(route, img_path):
     """
@@ -105,7 +110,7 @@ def files(route, img_path):
             mid = len(files) / 2
             image = cv2.imread(file_path, 0)  # Lees image via path in zwart\wit
             min_rad = int(round(radius * 0.8))
-            max_rad = int(round(radius * 1.5))
+            max_rad = 200
             result = detect_circle(image, min_rad, max_rad)
             if result:
                 radius, center, surface, img = result
@@ -147,21 +152,3 @@ def detect_circle(img, min_radius, max_radius, p1=200, p2=100):
                     return radius, (i[0], i[1]), area, img
         else:
             continue
-
-
-def pixels_to_micrometers(pixels, image):
-    """
-    Converts pixels to micrometers with a resolution of 3 pixels/micrometer
-    """
-    if len(image) == 800:
-        c = 3
-    else:
-        c = 1.6
-    return pixels / c  # aantal micrometer
-
-
-def circular_area(radius):
-    """
-    Uses the radius of a circle to determine its surface area
-    """
-    return np.pi * (radius ** 2)
