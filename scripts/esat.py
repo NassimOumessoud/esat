@@ -1,14 +1,14 @@
 import os
 import cv2
 import numpy as np
-import xlsxwriter
 import analysis
+
 
 def pixels_to_micrometers(pixels, image):
     """
     Converts pixels to micrometers with a resolution of 3 pixels/micrometer
     """
-    if len(image) == 800:
+    if image == 800:
         c = 3
     else:
         c = 1.6
@@ -22,7 +22,7 @@ def circular_area(radius):
     return np.pi * (radius ** 2)
 
 
-def run(main_folder, t_start, t_end, weight=10, growth=2, shrink=2):
+def run(main_folder, times, weight=10, growth=2, shrink=2):
     """
     Main function that controls the circle analysis and passes the resluts to
     the analysis file.
@@ -46,7 +46,7 @@ def run(main_folder, t_start, t_end, weight=10, growth=2, shrink=2):
             img_path = os.path.join(path, img_folder)
             os.makedirs(img_path, exist_ok=True)
             route = item_path     #route for a folder
-            process(route, img_path, t_start, t_end, 
+            process(route, img_path, times, 
                     item, excel, i=i, col=column)
             column += 4
             
@@ -56,7 +56,7 @@ def run(main_folder, t_start, t_end, weight=10, growth=2, shrink=2):
             img_path = os.path.join(path, img_folder)
             os.makedirs(img_path, exist_ok=True)
             route = main_folder                        #route for the only folder
-            process(route, img_path, t_start, t_end, main_folder, excel)
+            process(route, img_path, times, main_folder, excel)
             break
         
     t2 = time.time()
@@ -64,23 +64,20 @@ def run(main_folder, t_start, t_end, weight=10, growth=2, shrink=2):
     print("Deze analyse duurde totaal %.3f minuten" % (dt / 60))
 
 
-def process(route, img_path, t_start, t_end, folder, excel, i=0, col=0):
+def process(route, img_path, times, folder, excel, i=0, col=0):
     
             results = files(route, img_path)
-            print('I got results!') 
-            
+            print(times)
+            t_start, t_end = times
             x = [
                  round(e, 1)
                  for e in np.linspace(t_start[i], t_end[i], len(results))
                  ]        
             
             import imp
-            
             imp.reload(analysis)
             print("reloaded analysis")
-            
             analysis.analyse(results, x, folder, img_path, excel, col)
-#            workbook.close()
             
 
 def files(route, img_path):
@@ -89,23 +86,24 @@ def files(route, img_path):
     the files to the circle detector and retrieves the radius of the
     """
     surfaces = []
-    for dirpath, _, files in os.walk(route):  # open een van de 7 folders
+    for dirpath, _, files in os.walk(route):
         file_counter = 0
         radius = 0
-        for file_name in files:  # Zoek fotos per folder
-            file_path = os.path.join(dirpath, file_name)  # Voeg path en file_name samen
+        for file_name in files:
+            file_path = os.path.join(dirpath, file_name)
             mid = len(files) / 2
-            image = cv2.imread(file_path, 0)  # Lees image via path in zwart\wit
+            image = cv2.imread(file_path, 0)  
             min_rad = int(round(radius * 0.8))
-            max_rad = 200
+            max_rad = int(round(radius*2))
             result = detect_circle(image, min_rad, max_rad)
             if result:
-                radius, center, surface, img = result
-                surfaces.append(surface)
+                radius, center, size, img = result
+                surfaces.append(size)
                 
                 img_file = os.path.join(img_path, str(file_counter))
                 cv2.imwrite(img_file + ".png", img)
                 cv2.waitKey(0)
+                file_counter += 1
                 
     return surfaces
 
@@ -116,7 +114,7 @@ def detect_circle(img, min_radius, max_radius, p1=200, p2=100):
     refer to the canny edge detection that the HoughCircles uses to detect the
     circles.
     """
- 
+    size = len(img)
     for p in range(p1, p2, -10):
 
         detected_circles = cv2.HoughCircles(
@@ -134,7 +132,7 @@ def detect_circle(img, min_radius, max_radius, p1=200, p2=100):
             detected_circles_rounded = np.uint16(np.around(detected_circles))
             for i in detected_circles_rounded[0, :]:
                     cv2.circle(img, (i[0], i[1]), i[2], (255), 5)  # Teken cirkel
-                    radius = pixels_to_micrometers(i[2], img)
+                    radius = pixels_to_micrometers(i[2], size)
                     area = round(circular_area(radius))
                     return radius, (i[0], i[1]), area, img
         else:

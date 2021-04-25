@@ -8,7 +8,7 @@ Created on Tue Jan 19 12:30:02 2021
 import os
 from tkinter import *
 from tkinter import filedialog, ttk
-
+import numpy as np
 import esat
 
 
@@ -79,31 +79,34 @@ def main():
 
         imp.reload(esat)
         print("reloaded esat")
-        tstart = []
-        teind = []
-        
+        t_start = []
+        t_end = []
+
         if len(folders) == 0:
             print('One folder found')
             
             start = float(starts[0].get())
             stop = float(stops[0].get())
-            tstart.append(start)
-            teind.append(stop)
+            t_start.append(start)
+            t_end.append(stop)
             
         else:
             for i in range(len(folders)):
                 print('Multiple folders found')
-                tstart.append(float(starts[i].get()))
-                teind.append(float(stops[i].get()))
+                t_start.append(float(starts[i].get()))
+                t_end.append(float(stops[i].get()))
+                print([t_start, t_end])
+            times = [t_start, t_end]
+        
         try:
             weight = int(sma_entry.get())
             growth = float(grow_entry.get())
             shrink = float(shrink_entry.get())
             esat.run(
-                main_folder, tstart, teind, weight=weight, growth=growth, shrink=shrink
+                main_folder, times, weight=weight, growth=growth, shrink=shrink
             )
         except ValueError:
-            esat.run(main_folder, tstart, teind)
+            esat.run(main_folder, times)
 
     run_but = Button(input_frame, text="Run analysis", borderwidth=3, command=init)
     run_but.grid(column=3, row=row + 1)
