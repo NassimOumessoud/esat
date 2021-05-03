@@ -26,8 +26,7 @@ class Excel:
         self.sheet_2 = self.workbook.add_worksheet("Slope")
         
         
-    
-    def write_excel(self, data, slope_data, start_data, excel_index, name,
+    def write_excel(self, data, slope_data, slope_1_data, excel_index, name,
              collapses, rises, time):
         """
         Function that writes all data in an excel file which will be stored in the same 
@@ -38,19 +37,24 @@ class Excel:
         
         self.sheet.write(excel_index, 0, 'Time [hours]', bold)
         self.sheet.write(excel_index+1, 0, f'Folder {name} [micrometer^2]', bold)
+        
         for i in range(len(data)):
             self.sheet.write(excel_index+1, i+1, data[i])
             self.sheet.write(excel_index, i+1, np.around(time[i], decimals=1))
             
         self.sheet_2.write(0, 0, 'Files', bold)
-        self.sheet_2.write(0, 1, 'Slope [micrometer^2/hour]', bold)
+        self.sheet_2.write(0, 1, 'Exponential slope [a for a*exp(x)]', bold)
         self.sheet_2.write(excel_index+1, 0, f'{name}', bold)
         self.sheet_2.write(excel_index+1, 1, slope_data)
-        self.sheet_2.write(excel_index+1, 2, start_data)
+        self.sheet_2.write(0, 1, 'Linear slope [micrometer^2/hour]', bold)
+        self.sheet_2.write(excel_index+1, 2, slope_1_data)
         
         for i, collaps in enumerate(collapses):
             self.sheet_2.write(excel_index+2, 0, 'Collapses ->')
             self.sheet_2.write(excel_index+2, i+1, collaps)
+            
+    def close(self):
+        self.workbook.close()
         
         
 def analyse(result, x_result, name, path, excel, excel_index):
@@ -65,24 +69,32 @@ def analyse(result, x_result, name, path, excel, excel_index):
                                           valleys[1], 
                                           peaks[0], 
                                           peaks[1])
-    def fit(x, a, b):
+    def exp_fit(x, a, b):
         return [a*np.exp(x[i]*b) for i in range(len(x))]
     
+    def lin_fit(x, a, b):
+        return [a*t+b for t in x]
+    
     from scipy.optimize import curve_fit
-    popt, pcov = curve_fit(fit, x_result, result, p0=[553, 0])
+    popt, __ = curve_fit(exp_fit, x_result, result, p0=[553, 0])
     slope = np.around(len(result)/(x_result[-1]-x_result[0])*popt[0], decimals=0)
     start = np.around(popt[1], decimals=2)
-    lin_fit = fit(x_result, popt[0], popt[1])
+    fit = exp_fit(x_result, popt[0], popt[1])
+    
+    popt_1, __ = curve_fit(exp_fit, x_result, result, p0=[250, start])
+    fit_1 = lin_fit(x_result, popt_1[0], popt_1[1])
+    slope_1 = popt_1[0]
     
     plot(name, path,
          Measured=[x_result, result],
          Valleys=valleys,
          Peaks=peaks, 
          SMA=[x_sma, sma],
-         Fit=[x_result, lin_fit])
+         Exponential_fit=[x_result, fit],
+         Linear_fit=[x_result, fit_1])
 
-    excel.write_excel(result, slope, start, excel_index, name, collapses, rises, x_result)    
-
+    excel.write_excel(result, slope, slope_1, excel_index, name, collapses, rises, x_result)    
+    excel.close()
 
 def simple_moving_average(values, window):      #valley and peak detection
     """
@@ -172,7 +184,7 @@ def plot(name, path, **kwargs):
     """
     #order=Measured, Valleys, Peaks, SMA, Fit
     colors = ['g', 'r', 'y', 'b', 'c', 'm', 'k', 'w']
-    lintypes = ['-', 'o', 'o', '-', '--']
+    lintypes = ['-', 'o', 'o', '-', '--', '--']
     i = 0
     for result, data in kwargs.items():
         plt.plot(data[0], data[1], lintypes[i], color=colors[i], label=str(result))
