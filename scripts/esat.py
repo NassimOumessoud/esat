@@ -27,11 +27,14 @@ def run(main_folder, times, weight=10, growth=2, shrink=2):
     Main function that controls the circle analysis and passes the resluts to
     the analysis file.
     """
+    import imp
+    imp.reload(analysis)
+    print("reloaded analysis")
     import time
 
     t1 = time.time()
     output_directory = f"{main_folder}_analysed"
-    path = os.path.join(main_folder, output_directory)
+    path = os.path.join(main_folder, output_directory+'/')
     os.makedirs(path, exist_ok=True)
         
     excel = analysis.Excel(main_folder, path)
@@ -56,7 +59,7 @@ def run(main_folder, times, weight=10, growth=2, shrink=2):
             route = main_folder                        #route for the only folder
             process(route, img_path, path, times, main_folder, excel)
             break
-        
+    excel.close()
     t2 = time.time()
     dt = t2 - t1
     print("Deze analyse duurde totaal %.3f minuten" % (dt / 60))
@@ -65,16 +68,12 @@ def run(main_folder, times, weight=10, growth=2, shrink=2):
 def process(route, img_path, output_path, times, folder, excel, i=0, col=0):
     
             results = files(route, img_path)
-            print(col)
             t_start, t_end = times
             x = [
                  round(e, 1)
                  for e in np.linspace(t_start[i], t_end[i], len(results))
                  ]        
             
-            import imp
-            imp.reload(analysis)
-            print("reloaded analysis")
             analysis.analyse(results, x, folder, output_path, excel, col)
             
 

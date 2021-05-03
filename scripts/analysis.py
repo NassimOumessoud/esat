@@ -26,10 +26,11 @@ class Excel:
         self.sheet_2 = self.workbook.add_worksheet("Slope")
         
         
-    def write_excel(self, data, slope_data, slope_1_data, excel_index, name,
+    def write_excel(self, data, slope_data, slope_data_1, excel_index, name,
              collapses, rises, time):
         """
-        Function that writes all data in an excel file which will be stored in the same 
+        Function that writes all data in an excel file 
+        which will be stored in the same 
         directory as the main_folder from main.py.
         """
         
@@ -39,15 +40,16 @@ class Excel:
         self.sheet.write(excel_index+1, 0, f'Folder {name} [micrometer^2]', bold)
         
         for i in range(len(data)):
-            self.sheet.write(excel_index+1, i+1, data[i])
             self.sheet.write(excel_index, i+1, np.around(time[i], decimals=1))
+            self.sheet.write(excel_index+1, i+1, data[i])
             
         self.sheet_2.write(0, 0, 'Files', bold)
         self.sheet_2.write(0, 1, 'Exponential slope [a for a*exp(x)]', bold)
         self.sheet_2.write(excel_index+1, 0, f'{name}', bold)
         self.sheet_2.write(excel_index+1, 1, slope_data)
-        self.sheet_2.write(0, 1, 'Linear slope [micrometer^2/hour]', bold)
-        self.sheet_2.write(excel_index+1, 2, slope_1_data)
+        
+        self.sheet_2.write(0, 2, 'Linear slope [micrometer^2/hour]', bold)
+        self.sheet_2.write(excel_index+1, 2, slope_data_1)
         
         for i, collaps in enumerate(collapses):
             self.sheet_2.write(excel_index+2, 0, 'Collapses ->')
@@ -77,13 +79,13 @@ def analyse(result, x_result, name, path, excel, excel_index):
     
     from scipy.optimize import curve_fit
     popt, __ = curve_fit(exp_fit, x_result, result, p0=[553, 0])
-    slope = np.around(len(result)/(x_result[-1]-x_result[0])*popt[0], decimals=0)
+    slope = np.around(popt[0], decimals=0)
     start = np.around(popt[1], decimals=2)
     fit = exp_fit(x_result, popt[0], popt[1])
     
-    popt_1, __ = curve_fit(exp_fit, x_result, result, p0=[250, start])
+    popt_1, __ = curve_fit(lin_fit, x_result, result, p0=[0, 0])
     fit_1 = lin_fit(x_result, popt_1[0], popt_1[1])
-    slope_1 = popt_1[0]
+    slope_1 = np.around(popt_1[0], decimals=0)
     
     plot(name, path,
          Measured=[x_result, result],
@@ -93,8 +95,9 @@ def analyse(result, x_result, name, path, excel, excel_index):
          Exponential_fit=[x_result, fit],
          Linear_fit=[x_result, fit_1])
 
-    excel.write_excel(result, slope, slope_1, excel_index, name, collapses, rises, x_result)    
-    excel.close()
+    excel.write_excel(result, slope, slope_1, excel_index, name, 
+                      collapses, rises, x_result)    
+    
 
 def simple_moving_average(values, window):      #valley and peak detection
     """
@@ -162,14 +165,16 @@ def peak_valley_change(x_valleys, y_valleys, x_peaks, y_peaks):
     for i in range(1, len(y_peaks)-1):
         for r in range(1, len(y_valleys)):
             if (x_peaks[i+1]-x_peaks[i]) > (x_peaks[i]-x_valleys[r]):
-                down_percentage = (y_valleys[r]-y_peaks[i])/y_peaks[i]*100
+                down_percentage = round((y_valleys[r]-y_peaks[i])/
+                                        y_peaks[i]*100, 3)
                 collapses.append(f'{x_peaks[i]}, {down_percentage}')
                 break
             
     for i in range(1, len(y_valleys)-1):
         for r in range(1, len(y_peaks)):
             if (x_valleys[i+1]-x_valleys[i]) > x_valleys[i]-x_peaks[r]:
-                up_percentage = (y_peaks[r]-y_valleys[i])/y_peaks[r]*100
+                up_percentage = round((y_peaks[r]-y_valleys[i])/
+                                      y_peaks[r]*100, 3)
                 rises.append(f'{x_valleys[i]}, {up_percentage}')
                 break
     return collapses, rises
@@ -194,8 +199,7 @@ def plot(name, path, **kwargs):
     
     plt.title('Surface area of blastocyt in the '+ name +' folder')
     plt.xlabel('Time [h]')
-    plt.ylabel('Surface area [mu meter]')
-    plt.title('plot')
+    plt.ylabel('Surface area [mu^2 meter]')
     plt.legend()
     plt.grid()
     
