@@ -41,7 +41,6 @@ def run(main_folder, times, weight=10, growth=2, shrink=2):
         item_path = os.path.join(main_folder, item)
         
         if os.path.isdir(item_path):
-            print('Item is a folder')
             img_folder = f"Circles_{item}"
             img_path = os.path.join(path, img_folder)
             os.makedirs(img_path, exist_ok=True)
@@ -51,7 +50,6 @@ def run(main_folder, times, weight=10, growth=2, shrink=2):
             column += 4
             
         elif os.path.isfile(item_path):
-            print('Item is a file')
             img_folder = f"Circles_{main_folder}"
             img_path = os.path.join(path, img_folder)
             os.makedirs(img_path, exist_ok=True)
@@ -67,7 +65,7 @@ def run(main_folder, times, weight=10, growth=2, shrink=2):
 def process(route, img_path, output_path, times, folder, excel, i=0, col=0):
     
             results = files(route, img_path)
-            
+            print(col)
             t_start, t_end = times
             x = [
                  round(e, 1)

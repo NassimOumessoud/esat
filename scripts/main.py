@@ -83,7 +83,6 @@ def main():
         t_end = []
 
         if len(folders) == 0:
-            print('One folder found')
             
             start = float(starts[0].get())
             stop = float(stops[0].get())
@@ -92,7 +91,6 @@ def main():
             
         else:
             for i in range(len(folders)):
-                print('Multiple folders found')
                 t_start.append(float(starts[i].get()))
                 t_end.append(float(stops[i].get()))
                 
