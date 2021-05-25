@@ -39,6 +39,7 @@ class Excel:
         self.sheet.write(excel_index, 0, 'Time [hours]', bold)
         self.sheet.write(excel_index+1, 0, f'Folder {name} [micrometer^2]', bold)
         
+        
         for i in range(len(data)):
             self.sheet.write(excel_index, i+1, np.around(time[i], decimals=1))
             self.sheet.write(excel_index+1, i+1, data[i])

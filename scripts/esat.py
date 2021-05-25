@@ -34,11 +34,12 @@ def run(main_folder, times, weight=10, growth=2, shrink=2):
 
     t1 = time.time()
     output_directory = f"{main_folder}_analysed"
-    path = os.path.join(main_folder, output_directory+'/')
+    path = os.path.join(main_folder, output_directory + '/')
     os.makedirs(path, exist_ok=True)
         
     excel = analysis.Excel(main_folder, path)
     column = 0
+    
     for i, item in enumerate(os.listdir(main_folder)):
         
         item_path = os.path.join(main_folder, item)
@@ -59,6 +60,8 @@ def run(main_folder, times, weight=10, growth=2, shrink=2):
             route = main_folder                        #route for the only folder
             process(route, img_path, path, times, main_folder, excel)
             break
+        
+        
     excel.close()
     t2 = time.time()
     dt = t2 - t1
@@ -86,6 +89,7 @@ def files(route, img_path):
     for dirpath, _, files in os.walk(route):
         file_counter = 0
         radius = 0
+        files.sort()
         for file_name in files:
             file_path = os.path.join(dirpath, file_name)
             mid = len(files) / 2
