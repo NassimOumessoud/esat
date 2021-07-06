@@ -11,6 +11,7 @@ def pixels_to_micrometers(pixels, image):
     if image == 800:
         c = 3
         well_size = 333
+        
     else:
         c = 1.6
         well_size = 177
@@ -49,9 +50,16 @@ def run(main_folder, times, weight=10, growth=2, shrink=2):
         item_path = os.path.join(main_folder, item)
         
         if os.path.isdir(item_path):
+            
             img_folder = f"Circles_{item}"
-            img_path = os.path.join(path, img_folder)
-            os.makedirs(img_path, exist_ok=True)
+            outliers_folder = f"Faulty_circles_{item}"
+            
+            img_path = (os.path.join(path, img_folder), 
+                        os.path.join(path, outliers_folder))
+            
+            os.makedirs(img_path[0], exist_ok=True)
+            os.makedirs(img_path[1], exist_ok=True)
+            
             route = item_path     #route for a folder
             process(route, img_path, path, times, 
                     item, excel, i=i, col=column)
@@ -90,6 +98,9 @@ def files(route, img_path):
     the files to the circle detector and retrieves the radius of the
     """
     surfaces = []
+    outliers = []
+    images, outlying_images = img_path
+
     for dirpath, _, files in os.walk(route):
         file_counter = 0
         radius = 0
@@ -100,26 +111,37 @@ def files(route, img_path):
             file_path = os.path.join(dirpath, file_name)
             image = cv2.imread(file_path, 0)  
             
-            if radius >= well:
-                min_rad = 10
-                max_rad = int(round(well * 0.9))
-            else:
-                min_rad = int(round(radius * 0.8))
-                max_rad = int(round(radius * 1.5))
+            min_rad = int(round(radius * 0.8))
+            max_rad = int(round(radius * 1.2))
                 
             result = detect_circle(image, min_rad, max_rad)
             
             
             if result:
                 radius, center, img = result
-                mm_radius, well = pixels_to_micrometers(radius, len(img))
-                area = round(circular_area(mm_radius))
-                surfaces.append(area)
                 
-                img_file = os.path.join(img_path, str(file_counter))
-                cv2.imwrite(img_file + ".png", img)
-                cv2.waitKey(0)
-                file_counter += 1
+                if radius >= well:
+                    mm_radius, well = pixels_to_micrometers(radius, len(img))
+                    area = round(circular_area(mm_radius))
+                    outliers.append(area)
+                    surfaces.append(0)
+                    
+                    radius = 0
+                    img_file = os.path.join(outlying_images, file_name)
+                    cv2.imwrite(img_file + ".png", img)
+                    cv2.waitKey(0)
+                    print(file_name)
+                    
+                    
+                elif radius < well:
+                    mm_radius, well = pixels_to_micrometers(radius, len(img))
+                    area = round(circular_area(mm_radius))
+                    surfaces.append(area)
+                    
+                    img_file = os.path.join(images, file_name)
+                    cv2.imwrite(img_file + ".png", img)
+                    cv2.waitKey(0)
+                    file_counter += 1
                 
     return surfaces
 

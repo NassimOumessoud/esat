@@ -26,8 +26,8 @@ class Excel:
         self.sheet_2 = self.workbook.add_worksheet("Slope")
         
         
-    def write_excel(self, data, slope_data, slope_data_1, excel_index, name,
-             collapses, rises, time):
+    def write_excel(self, data, slope_data, slope_data_1, excel_index, name, 
+                    time):
         """
         Function that writes all data in an excel file 
         which will be stored in the same 
@@ -41,8 +41,12 @@ class Excel:
         
         
         for i in range(len(data)):
+            
+            if data[i] == 0:
+                self.sheet.write(excel_index+1, i+1, data[i], self.red)
+            else:
+                self.sheet.write(excel_index+1, i+1, data[i])
             self.sheet.write(excel_index, i+1, np.around(time[i], decimals=1))
-            self.sheet.write(excel_index+1, i+1, data[i])
             
         self.sheet_2.write(0, 0, 'Files', bold)
         self.sheet_2.write(0, 1, 'Exponential slope [a for a*exp(x)]', bold)
@@ -52,9 +56,6 @@ class Excel:
         self.sheet_2.write(0, 2, 'Linear slope [micrometer^2/hour]', bold)
         self.sheet_2.write(excel_index+1, 2, slope_data_1)
         
-        for i, collaps in enumerate(collapses):
-            self.sheet_2.write(excel_index+2, 0, 'Collapses ->')
-            self.sheet_2.write(excel_index+2, i+1, collaps)
             
     def close(self):
         self.workbook.close()
@@ -64,20 +65,15 @@ def analyse(result, x_result, name, path, excel, excel_index):
     """
     Initialisation function for the analysis of given data
     """
-    weight = 10
-    sma = simple_moving_average(result, weight)
-    x_sma = x_result[0:1-weight]
-    valleys, peaks = peaks_and_valleys(x_sma, sma)
-    collapses, rises = peak_valley_change(valleys[0], 
-                                          valleys[1], 
-                                          peaks[0], 
-                                          peaks[1])
+    
+    
     def exp_fit(x, a, b):
         return [a*np.exp(x[i]*b) for i in range(len(x))]
     
     def lin_fit(x, a, b):
         return [a*t+b for t in x]
     
+
     from scipy.optimize import curve_fit
     popt, __ = curve_fit(exp_fit, x_result, result, p0=[553, 0])
     slope = np.around(popt[0], decimals=0)
@@ -87,17 +83,35 @@ def analyse(result, x_result, name, path, excel, excel_index):
     popt_1, __ = curve_fit(lin_fit, x_result, result, p0=[0, 0])
     fit_1 = lin_fit(x_result, popt_1[0], popt_1[1])
     slope_1 = np.around(popt_1[0], decimals=0)
-    
-    plot(name, path,
-         Measured=[x_result, result],
-         Valleys=valleys,
-         Peaks=peaks, 
-         SMA=[x_sma, sma],
-         Exponential_fit=[x_result, fit],
-         Linear_fit=[x_result, fit_1])
 
-    excel.write_excel(result, slope, slope_1, excel_index, name, 
-                      collapses, rises, x_result)    
+     
+    if len(result) < 10:
+        
+        plot(name, path,
+             Measured=[x_result, result],
+             Exponential_fit=[x_result, fit],
+             Linear_fit=[x_result, fit_1])
+        
+    else:
+        weight = 10
+        sma = simple_moving_average(result, weight)
+        x_sma = x_result[0:1-weight]
+        valleys, peaks = peaks_and_valleys(x_sma, sma)
+        collapses, rises = peak_valley_change(valleys[0], 
+                                              valleys[1], 
+                                              peaks[0], 
+                                              peaks[1])
+   
+        plot(name, path,
+             Measured=[x_result, result],
+             Valleys=valleys,
+             Peaks=peaks, 
+             SMA=[x_sma, sma],
+             Exponential_fit=[x_result, fit],
+             Linear_fit=[x_result, fit_1])
+
+    excel.write_excel(result, slope, slope_1, excel_index, name, x_result)   
+                      
     
 
 def simple_moving_average(values, window):      #valley and peak detection
