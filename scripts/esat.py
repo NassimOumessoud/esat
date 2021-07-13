@@ -103,8 +103,8 @@ def files(route, img_path):
 
     for dirpath, _, files in os.walk(route):
         file_counter = 0
-        radius = 0
-        well = 0
+        radius = 100     #First guess
+        well = 177
         files.sort()
         
         for file_name in files:
@@ -121,16 +121,16 @@ def files(route, img_path):
                 radius, center, img = result
                 
                 if radius >= well:
+               
                     mm_radius, well = pixels_to_micrometers(radius, len(img))
                     area = round(circular_area(mm_radius))
                     outliers.append(area)
                     surfaces.append(0)
                     
-                    radius = 0
+                    radius = 100
                     img_file = os.path.join(outlying_images, file_name)
                     cv2.imwrite(img_file + ".png", img)
                     cv2.waitKey(0)
-                    print(file_name)
                     
                     
                 elif radius < well:
@@ -152,10 +152,12 @@ def detect_circle(img, min_radius, max_radius, p1=160, p2=100):
     refer to the canny edge detection that the HoughCircles uses to detect the
     circles.
     """
+    
+    img_blur = cv2.medianBlur(img, 7)
     for p in range(p1, p2, -10):
 
         detected_circles = cv2.HoughCircles(
-            img,
+            img_blur,
             cv2.HOUGH_GRADIENT,
             1.5,
             290,

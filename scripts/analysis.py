@@ -77,7 +77,6 @@ def analyse(result, x_result, name, path, excel, excel_index):
     from scipy.optimize import curve_fit
     popt, __ = curve_fit(exp_fit, x_result, result, p0=[553, 0])
     slope = np.around(popt[0], decimals=0)
-    start = np.around(popt[1], decimals=2)
     fit = exp_fit(x_result, popt[0], popt[1])
     
     popt_1, __ = curve_fit(lin_fit, x_result, result, p0=[0, 0])
