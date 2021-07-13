@@ -27,7 +27,7 @@ def circular_area(radius):
     return np.pi * (radius ** 2)
 
 
-def run(main_folder, times, weight=10, growth=2, shrink=2):
+def run(main_folder, times, growth=20, shrink=20):
     """
     Main function that controls the circle analysis and passes the resluts to
     the analysis file.
@@ -62,14 +62,14 @@ def run(main_folder, times, weight=10, growth=2, shrink=2):
             
             route = item_path     #route for a folder
             process(route, img_path, path, times, 
-                    item, excel, i=i, col=column)
+                    item, excel, i=i, col=column, growth=growth, shrink=shrink)
             column += 4
             
         elif os.path.isfile(item_path):
             img_folder = f"Circles_{main_folder}"
             img_path = os.path.join(path, img_folder)
             os.makedirs(img_path, exist_ok=True)
-            route = main_folder                        #route for the only folder
+            route = main_folder                        
             process(route, img_path, path, times, main_folder, excel)
             break
         
@@ -80,19 +80,30 @@ def run(main_folder, times, weight=10, growth=2, shrink=2):
     print("Deze analyse duurde totaal %.3f minuten" % (dt / 60))
 
 
-def process(route, img_path, output_path, times, folder, excel, i=0, col=0):
+def process(route, img_path, output_path, times, folder, excel, shrink=20,
+            growth=20, i=0, col=0):
     
-            results = files(route, img_path)
+            results = files(route, img_path, shrink, growth)
             t_start, t_end = times
-            x = [
-                 round(e, 1)
-                 for e in np.linspace(t_start[i], t_end[i], len(results))
-                 ]        
             
-            analysis.analyse(results, x, folder, output_path, excel, col)
+            try: 
+                x = [
+                 np.around(e, decimals=1)
+                 for e in np.arange(t_start[i], t_end[i], 9.5/60)
+                 ] 
+                
+                analysis.analyse(results, x, folder, output_path, excel, col)
+            
+            except ValueError:
+                x = [
+                     np.around(e, decimals=1)
+                     for e in np.linspace(t_start[i], t_end[i], len(results))
+                     ] 
+            
+                analysis.analyse(results, x, folder, output_path, excel, col)
             
 
-def files(route, img_path):
+def files(route, img_path, shrink, growth):
     """
     Function that searches for all the files inside the folder route, then passes
     the files to the circle detector and retrieves the radius of the
@@ -111,8 +122,8 @@ def files(route, img_path):
             file_path = os.path.join(dirpath, file_name)
             image = cv2.imread(file_path, 0)  
             
-            min_rad = int(round(radius * 0.8))
-            max_rad = int(round(radius * 1.2))
+            min_rad = int(round(radius * (1-shrink*0.01)))
+            max_rad = int(round(radius * (1+growth*0.01)))
                 
             result = detect_circle(image, min_rad, max_rad)
             

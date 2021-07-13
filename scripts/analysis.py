@@ -75,6 +75,7 @@ def analyse(result, x_result, name, path, excel, excel_index):
     
 
     from scipy.optimize import curve_fit
+
     popt, __ = curve_fit(exp_fit, x_result, result, p0=[553, 0])
     slope = np.around(popt[0], decimals=0)
     fit = exp_fit(x_result, popt[0], popt[1])
@@ -139,7 +140,7 @@ def peaks_and_valleys(x, y):                #peak and valley detection
     x_top = 0
     dal = 0
     top = 0
-    threshold = 2        #Assuming there are no significant peaks and valleys within threshold value of each other
+    threshold = 2        
     
     for i in range(len(y)-2):
         if y[i+1] >= y[i] and y[i+1] >= y[i+2]:
@@ -153,7 +154,7 @@ def peaks_and_valleys(x, y):                #peak and valley detection
                     top_waarden.append(top)
                     break
             
-        elif y[i+1] <= y[i] and y[i+1] <= y[i+2] and dal_waarden[-1] <= y[i+1]: #define valleys and make sure that they are properly spaced
+        elif y[i+1] <= y[i] and y[i+1] <= y[i+2] and dal_waarden[-1] <= y[i+1]: 
             dal = y[i+1]
             x_dal = x[i+1]
             for r in range(i, len(y)-2):
