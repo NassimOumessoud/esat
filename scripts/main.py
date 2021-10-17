@@ -55,12 +55,12 @@ def main():
 
     grow_entry = Entry(input_frame, borderwidth=3)
     grow_entry.grid(column=2, row=row + 2)
-    grow_label = Label(input_frame, text="upper limit", bg="lightsteelblue")
+    grow_label = Label(input_frame, text="upper limit [%]", bg="lightsteelblue")
     grow_label.grid(column=1, row=row + 2)
 
     shrink_entry = Entry(input_frame, borderwidth=3)
     shrink_entry.grid(column=2, row=row + 3)
-    shrink_label = Label(input_frame, text="lower limit", bg="lightsteelblue")
+    shrink_label = Label(input_frame, text="lower limit [%]", bg="lightsteelblue")
     shrink_label.grid(column=1, row=row + 3)
 
     def init():

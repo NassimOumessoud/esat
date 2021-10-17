@@ -86,21 +86,21 @@ def process(route, img_path, output_path, times, folder, excel, shrink=20,
             results = files(route, img_path, shrink, growth)
             t_start, t_end = times
             
-            try: 
-                x = [
+#            try: 
+#                x = [
+#                 np.around(e, decimals=1)
+#                 for e in np.arange(t_start[i], t_end[i], 9.5/60)
+#                 ] 
+#                
+#                analysis.analyse(results, x, folder, output_path, excel, col)
+#            
+#            except ValueError:
+            x = [
                  np.around(e, decimals=1)
-                 for e in np.arange(t_start[i], t_end[i], 9.5/60)
+                 for e in np.linspace(t_start[i], t_end[i], len(results))
                  ] 
-                
-                analysis.analyse(results, x, folder, output_path, excel, col)
-            
-            except ValueError:
-                x = [
-                     np.around(e, decimals=1)
-                     for e in np.linspace(t_start[i], t_end[i], len(results))
-                     ] 
-            
-                analysis.analyse(results, x, folder, output_path, excel, col)
+        
+            analysis.analyse(results, x, folder, output_path, excel, col)
             
 
 def files(route, img_path, shrink, growth):
@@ -147,6 +147,10 @@ def files(route, img_path, shrink, growth):
                 elif radius < well:
                     mm_radius, well = pixels_to_micrometers(radius, len(img))
                     area = round(circular_area(mm_radius))
+                    
+                    if area <= 9000: #small radii probably incorrect
+                        area = 0
+                        
                     surfaces.append(area)
                     
                     img_file = os.path.join(images, file_name)

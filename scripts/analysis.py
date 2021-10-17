@@ -35,6 +35,7 @@ class Excel:
         """
         
         bold = self.workbook.add_format({'bold': True})
+        red = self.workbook.add_format({'font_color': 'red'})
         
         self.sheet.write(excel_index, 0, 'Time [hours]', bold)
         self.sheet.write(excel_index+1, 0, f'Folder {name} [micrometer^2]', bold)
@@ -43,7 +44,7 @@ class Excel:
         for i in range(len(data)):
             
             if data[i] == 0:
-                self.sheet.write(excel_index+1, i+1, data[i], self.red)
+                self.sheet.write(excel_index+1, i+1, data[i], red)
             else:
                 self.sheet.write(excel_index+1, i+1, data[i])
             self.sheet.write(excel_index, i+1, np.around(time[i], decimals=1))
